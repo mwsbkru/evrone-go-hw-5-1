@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"hw_2_1/internal/entity"
+	"evrone_go_hw_5_1/internal/entity"
 	"log/slog"
 )
 

@@ -1,6 +1,6 @@
 package repo
 
-import "hw_2_1/internal/entity"
+import "evrone_go_hw_5_1/internal/entity"
 
 type UserRepository interface {
 	Save(user entity.User) error

@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"hw_2_1/internal/entity"
-	"hw_2_1/internal/repo"
+	"evrone_go_hw_5_1/internal/entity"
+	"evrone_go_hw_5_1/internal/repo"
 )
 
 type UserService struct {
