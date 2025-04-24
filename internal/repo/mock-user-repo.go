@@ -11,9 +11,9 @@ func NewMockUserRepo() UserRepository {
 	return MockUserRepo{}
 }
 
-func (m MockUserRepo) Save(user entity.User) error {
+func (m MockUserRepo) Save(user entity.User) (entity.User, error) {
 	slog.Warn("Save user: ", user)
-	return nil
+	return entity.User{}, nil
 }
 
 func (m MockUserRepo) FindByID(id string) (entity.User, error) {

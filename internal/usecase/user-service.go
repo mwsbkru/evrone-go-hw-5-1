@@ -9,18 +9,18 @@ type UserService struct {
 	repo repo.UserRepository
 }
 
-func NewUserService(repo repo.UserRepository) UserService {
-	return UserService{repo: repo}
+func NewUserService(repo repo.UserRepository) *UserService {
+	return &UserService{repo: repo}
 }
 
 func (u UserService) CreateUser(name string, email string, role entity.UserRole) (entity.User, error) {
-	user := entity.User{Name: name, Email: email, Role: role, ID: email}
-	err := u.repo.Save(user)
+	user := entity.User{Name: name, Email: email, Role: role}
+	savedUser, err := u.repo.Save(user)
 	if err != nil {
 		return entity.User{}, err
 	}
 
-	return user, nil
+	return savedUser, nil
 }
 
 func (u UserService) GetUser(id string) (entity.User, error) {
