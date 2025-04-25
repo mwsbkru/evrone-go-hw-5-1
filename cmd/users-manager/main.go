@@ -14,7 +14,6 @@ func main() {
 
 	app.Run(cfg)
 
-	// TODO прикрутить docker
 	// TODO прикрутить postgresql
 	// TODO реализовать логику сохранения в БД
 	// TODO прикрутить Redis
