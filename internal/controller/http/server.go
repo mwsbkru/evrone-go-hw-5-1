@@ -2,9 +2,11 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"evrone_go_hw_5_1/config"
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/entity/dto"
+	"evrone_go_hw_5_1/internal/repo"
 	"evrone_go_hw_5_1/internal/usecase"
 	"github.com/gorilla/mux"
 	"log/slog"
@@ -42,7 +44,7 @@ func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	userResponseObject := dto.SaveUserResponseBody{
+	userResponseObject := dto.UserResponseBody{
 		ID:    savedUser.ID,
 		Name:  savedUser.Name,
 		Email: savedUser.Email,
@@ -60,16 +62,84 @@ func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (s *HttpServer) FindByID(writer http.ResponseWriter, request *http.Request) {
-	s.respondWithError(writer, http.StatusBadRequest, mux.Vars(request)["id"])
-	return
+	userId := mux.Vars(request)["id"]
+
+	user, err := s.userService.GetUser(userId)
+	if err != nil {
+		if errors.Is(err, &repo.ErrorUserNotFound{}) {
+			s.respondWithError(writer, http.StatusNotFound, err.Error())
+			return
+		}
+
+		slog.Error("Не загрузить пользователя", slog.String("error", err.Error()))
+		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	userResponse := dto.UserResponseBody{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+		Role:  string(user.Role),
+	}
+
+	userResponseBody, err := json.Marshal(userResponse)
+	if err != nil {
+		slog.Error("Не удалось сформировать тело ответа", slog.String("error", err.Error()))
+		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writer.Write(userResponseBody)
 }
 
 func (s *HttpServer) FindAll(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte("find All"))
+	users, err := s.userService.ListUsers()
+	if err != nil {
+		slog.Error("Не удалось загрузить пользователей", slog.String("error", err.Error()))
+		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	usersResponseList := make([]dto.UserResponseBody, 0, len(users))
+	for i := range users {
+		user := dto.UserResponseBody{
+			ID:    users[i].ID,
+			Name:  users[i].Name,
+			Email: users[i].Email,
+			Role:  string(users[i].Role),
+		}
+		usersResponseList = append(usersResponseList, user)
+	}
+
+	usersResponse := dto.UsersResponseBody{Data: usersResponseList}
+
+	usersResponseBody, err := json.Marshal(usersResponse)
+	if err != nil {
+		slog.Error("Не удалось сформировать тело ответа", slog.String("error", err.Error()))
+		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writer.Write(usersResponseBody)
 }
 
 func (s *HttpServer) DeleteByID(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte("delete user: " + mux.Vars(request)["id"]))
+	userId := mux.Vars(request)["id"]
+
+	err := s.userService.RemoveUser(userId)
+	if err != nil {
+		if errors.Is(err, &repo.ErrorUserNotFound{}) {
+			s.respondWithError(writer, http.StatusNotFound, err.Error())
+			return
+		}
+
+		slog.Error("Произошла ошибка при удалении пользователя", slog.String("error", err.Error()))
+		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writer.WriteHeader(http.StatusNoContent)
 }
 
 func (s *HttpServer) respondWithError(writer http.ResponseWriter, code int, message string) {

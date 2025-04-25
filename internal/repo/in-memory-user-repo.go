@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"errors"
 	"evrone_go_hw_5_1/internal/entity"
 	"strconv"
 )
@@ -27,7 +26,7 @@ func (i *InMemoryUserRepo) FindByID(id string) (entity.User, error) {
 		return user, nil
 	}
 
-	return entity.User{}, errors.New("User not found")
+	return entity.User{}, &ErrorUserNotFound{}
 }
 
 func (i *InMemoryUserRepo) FindAll() ([]entity.User, error) {
@@ -41,7 +40,10 @@ func (i *InMemoryUserRepo) FindAll() ([]entity.User, error) {
 }
 
 func (i *InMemoryUserRepo) DeleteByID(id string) error {
-	delete(i.memo, id)
+	if _, ok := i.memo[id]; ok {
+		delete(i.memo, id)
+		return nil
+	}
 
-	return nil
+	return &ErrorUserNotFound{}
 }

@@ -8,3 +8,9 @@ type UserRepository interface {
 	FindAll() ([]entity.User, error)
 	DeleteByID(id string) error
 }
+
+type ErrorUserNotFound struct{}
+
+func (e *ErrorUserNotFound) Error() string {
+	return "Not Found"
+}
