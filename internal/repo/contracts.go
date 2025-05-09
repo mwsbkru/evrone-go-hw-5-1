@@ -14,3 +14,8 @@ type ErrorUserNotFound struct{}
 func (e *ErrorUserNotFound) Error() string {
 	return "Not Found"
 }
+
+type UserCacheRepository interface {
+	SaveUserToCache(entity.User) error
+	FetchUserFromCache(id string) (entity.User, error)
+}

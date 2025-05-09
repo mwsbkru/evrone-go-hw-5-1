@@ -9,20 +9,26 @@ services:
       - redis
       - db
     environment:
-      - REDIS_HOST=redis
       - DB_CONNECTION_STRING=postgresql://hw:hw@db:5432/hw
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=hw
-      - DB_USER=hw
       - DB_PASSWORD=hw
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=hw
+      - REDIS_USERNAME=hw
+      - REDIS_DB=0
     networks:
       - app-network
 
   redis:
-    image: redis
+    image: redis:7.2.4
+    command: ["redis-server", "/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=hw
+      - REDIS_USERNAME=hw
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/etc/redis/redis.conf
     networks:
       - app-network
 
@@ -46,3 +52,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis-data:

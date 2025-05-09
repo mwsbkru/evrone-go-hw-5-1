@@ -1,0 +1,30 @@
+package repo
+
+import (
+	"encoding/json"
+	"evrone_go_hw_5_1/config"
+	"evrone_go_hw_5_1/internal/entity"
+	"fmt"
+	"github.com/redis/go-redis/v9"
+)
+
+type RedisUserCacheRepo struct {
+	client *redis.Client
+	cfg    config.Config
+}
+
+func NewRedisUserCacheRepo(client *redis.Client, cfg config.Config) RedisUserCacheRepo {
+	return RedisUserCacheRepo{client: client, cfg: cfg}
+}
+
+func (r RedisUserCacheRepo) SaveUserToCache(user entity.User) error {
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("ошибка при сериализации пользователя для кеширования: %w", err)
+	}
+}
+
+func (r RedisUserCacheRepo) FetchUserFromCache(id string) (entity.User, error) {
+	//TODO implement me
+	panic("implement me")
+}

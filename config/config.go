@@ -7,9 +7,16 @@ import (
 )
 
 type Config struct {
-	Host               string `env:"HOST" env-default:"0.0.0.0"`
-	Port               string `env:"PORT" env-default:"8080"`
-	DbConnectionString string `env:"DB_CONNECTION_STRING"`
+	Host                string `env:"HOST" env-default:"0.0.0.0"`
+	Port                string `env:"PORT" env-default:"8080"`
+	DbConnectionString  string `env:"DB_CONNECTION_STRING"`
+	RedisAddr           string `env:"REDIS_ADDR"`
+	RedisUserName       string `env:"REDIS_USERNAME"`
+	RedisPassword       string `env:"REDIS_PASSWORD"`
+	RedisDB             int    `env:"REDIS_DB"`
+	RedisMaxRetries     int    `env:"HOST" env-default:"5"`
+	RedisTimeoutSeconds int    `env:"HOST" env-default:"5"`
+	CacheLifetime       int    `env:"CACHE_LIFE_TIME" env-default:"10"`
 }
 
 func NewConfig() (*Config, error) {
