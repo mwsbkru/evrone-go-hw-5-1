@@ -14,8 +14,6 @@ func main() {
 
 	app.Run(cfg)
 
-	// TODO прикрутить Redis
-	// TODO реализовать кеширование
 	// TODO прикрутить Rabbit
 	// TODO реализовать отправку сообщения в Rabbit
 	// TODO пилить тесты

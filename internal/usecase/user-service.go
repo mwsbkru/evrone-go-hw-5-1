@@ -74,6 +74,7 @@ func (u UserService) RemoveUser(id string) error {
 }
 
 func (u UserService) FindByRole(role entity.UserRole) ([]entity.User, error) {
+	// про кеширование по ролям я не забыл, но пока не стал реализовывать
 	var result []entity.User
 
 	users, err := u.repo.FindAll()
