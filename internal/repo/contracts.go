@@ -17,5 +17,8 @@ func (e *ErrorUserNotFound) Error() string {
 
 type UserCacheRepository interface {
 	SaveUserToCache(entity.User) error
-	FetchUserFromCache(id string) (entity.User, error)
+	FetchUserFromCache(string) (entity.User, error)
+	SaveAllUsersToCache([]entity.User) error
+	FetchAllUsersFromCache() ([]entity.User, error)
+	InvalidateAllUsersCache() error
 }

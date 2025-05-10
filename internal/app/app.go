@@ -15,7 +15,7 @@ import (
 
 func Run(cfg *config.Config) {
 	ctx := context.Background()
-	db := redis.NewClient(&redis.Options{
+	redisClient := redis.NewClient(&redis.Options{
 		Addr:         cfg.RedisAddr,
 		Password:     cfg.RedisPassword,
 		DB:           cfg.RedisDB,
@@ -26,22 +26,21 @@ func Run(cfg *config.Config) {
 		WriteTimeout: time.Duration(cfg.RedisTimeoutSeconds) * time.Second,
 	})
 
-	if err := db.Ping(ctx).Err(); err != nil {
-		slog.Error("Unable to connect to redis", slog.String("error", err.Error()))
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		slog.Error("Не удалось подключиться к redis", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
-	db.Set(ctx, "testkey", "from_go", 60*time.Second)
-
 	conn, err := pgx.Connect(ctx, cfg.DbConnectionString)
 	if err != nil {
-		slog.Error("Unable to connect to database", slog.String("error", err.Error()))
+		slog.Error("не удалось подключиться к DB", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 	defer conn.Close(ctx)
 
 	repo := repo2.NewPostgreUserRepo(conn)
-	userService := usecase.NewUserService(repo)
+	cacheRepo := repo2.NewRedisUserCacheRepo(redisClient, cfg)
+	userService := usecase.NewUserService(repo, cacheRepo)
 	server := http.NewHttpServer(cfg, userService)
 	http.Serve(server, cfg)
 }

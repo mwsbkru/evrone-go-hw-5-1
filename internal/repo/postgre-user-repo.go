@@ -6,6 +6,7 @@ import (
 	"evrone_go_hw_5_1/internal/entity"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 type PostgreUserRepo struct {
@@ -30,6 +31,9 @@ func (p PostgreUserRepo) Save(user entity.User) (entity.User, error) {
 }
 
 func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
+	// типа мы долго ищем юзера
+	time.Sleep(time.Second)
+
 	query := "SELECT * from users WHERE id = $1"
 	var user entity.User
 
@@ -53,6 +57,9 @@ func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
 }
 
 func (p PostgreUserRepo) FindAll() ([]entity.User, error) {
+	// типа мы долго ищем юзера
+	time.Sleep(time.Second)
+
 	query := "SELECT * FROM users"
 
 	rows, err := p.conn.Query(context.Background(), query)

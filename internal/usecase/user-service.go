@@ -1,16 +1,19 @@
 package usecase
 
 import (
+	"errors"
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/repo"
+	"log/slog"
 )
 
 type UserService struct {
-	repo repo.UserRepository
+	repo      repo.UserRepository
+	cacheRepo repo.UserCacheRepository
 }
 
-func NewUserService(repo repo.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo repo.UserRepository, cacheRepo repo.UserCacheRepository) *UserService {
+	return &UserService{repo: repo, cacheRepo: cacheRepo}
 }
 
 func (u UserService) CreateUser(name string, email string, role entity.UserRole) (entity.User, error) {
@@ -20,22 +23,41 @@ func (u UserService) CreateUser(name string, email string, role entity.UserRole)
 		return entity.User{}, err
 	}
 
+	u.cacheRepo.InvalidateAllUsersCache()
 	return savedUser, nil
 }
 
 func (u UserService) GetUser(id string) (entity.User, error) {
-	user, err := u.repo.FindByID(id)
+	user, err := u.cacheRepo.FetchUserFromCache(id)
 	if err != nil {
-		return entity.User{}, err
+		if !errors.Is(err, &repo.ErrorUserNotFound{}) {
+			slog.Error("Не удалось получить пользователя из кеша", slog.String("error", err.Error()))
+		}
+
+		user, err = u.repo.FindByID(id)
+		if err != nil {
+			return entity.User{}, err
+		}
+
+		u.cacheRepo.SaveUserToCache(user)
 	}
 
 	return user, err
 }
 
 func (u UserService) ListUsers() ([]entity.User, error) {
-	users, err := u.repo.FindAll()
+	users, err := u.cacheRepo.FetchAllUsersFromCache()
 	if err != nil {
-		return []entity.User{}, err
+		if !errors.Is(err, &repo.ErrorUserNotFound{}) {
+			slog.Error("Не удалось получить пользователей из кеша", slog.String("error", err.Error()))
+		}
+
+		users, err = u.repo.FindAll()
+		if err != nil {
+			return []entity.User{}, err
+		}
+
+		u.cacheRepo.SaveAllUsersToCache(users)
 	}
 
 	return users, err
@@ -47,6 +69,7 @@ func (u UserService) RemoveUser(id string) error {
 		return err
 	}
 
+	u.cacheRepo.InvalidateAllUsersCache()
 	return nil
 }
 

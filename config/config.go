@@ -16,7 +16,7 @@ type Config struct {
 	RedisDB             int    `env:"REDIS_DB"`
 	RedisMaxRetries     int    `env:"HOST" env-default:"5"`
 	RedisTimeoutSeconds int    `env:"HOST" env-default:"5"`
-	CacheLifetime       int    `env:"CACHE_LIFE_TIME" env-default:"10"`
+	CacheLifetime       int    `env:"CACHE_LIFE_TIME" env-default:"60"`
 }
 
 func NewConfig() (*Config, error) {
