@@ -7,6 +7,7 @@ import (
 	repo2 "evrone_go_hw_5_1/internal/repo"
 	"evrone_go_hw_5_1/internal/usecase"
 	"github.com/jackc/pgx/v5"
+	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"os"
@@ -38,9 +39,19 @@ func Run(cfg *config.Config) {
 	}
 	defer conn.Close(ctx)
 
+	natsConn, err := nats.Connect(cfg.NatsUrl)
+	if err != nil {
+		slog.Warn(cfg.NatsUrl)
+		slog.Error("не удалось подключиться к Nats", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer natsConn.Close()
+
 	repo := repo2.NewPostgreUserRepo(conn)
 	cacheRepo := repo2.NewRedisUserCacheRepo(redisClient, cfg)
-	userService := usecase.NewUserService(repo, cacheRepo)
+	methodCalledNotifier := repo2.NewNatsMethodCalledNotifier(natsConn, cfg)
+	userService := usecase.NewUserService(repo, cacheRepo, methodCalledNotifier)
 	server := http.NewHttpServer(cfg, userService)
+
 	http.Serve(server, cfg)
 }

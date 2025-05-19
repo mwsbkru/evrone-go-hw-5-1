@@ -22,3 +22,7 @@ type UserCacheRepository interface {
 	FetchAllUsersFromCache() ([]entity.User, error)
 	InvalidateAllUsersCache() error
 }
+
+type MethodCalledNotifier interface {
+	NotifyMethodCalled(string, map[string]string) error
+}

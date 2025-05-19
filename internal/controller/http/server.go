@@ -16,11 +16,10 @@ import (
 type HttpServer struct {
 	cfg         *config.Config
 	userService *usecase.UserService
-	greet       string
 }
 
 func NewHttpServer(cfg *config.Config, userService *usecase.UserService) *HttpServer {
-	return &HttpServer{greet: "Hello", cfg: cfg, userService: userService}
+	return &HttpServer{cfg: cfg, userService: userService}
 }
 
 func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {

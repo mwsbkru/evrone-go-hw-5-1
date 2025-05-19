@@ -8,6 +8,7 @@ services:
     depends_on:
       - redis
       - db
+      - nats
     environment:
       - DB_CONNECTION_STRING=postgresql://hw:hw@db:5432/hw
       - DB_PASSWORD=hw
@@ -15,6 +16,23 @@ services:
       - REDIS_PASSWORD=hw
       - REDIS_USERNAME=hw
       - REDIS_DB=0
+      - NATS_URL=nats://nats:4222
+    networks:
+      - app-network
+
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"  # порт для клиентов
+      - "8222:8222"  # веб-интерфейс
+    volumes:
+      - nats-data:/data
+    environment:
+      - NATS_CLUSTER_NAME=hw
+      - NATS_CLUSTER_PORT=6222
+      - NATS_CLUSTER_ROLES=router
+      - NATS_CLUSTER_SIZE=1
+    restart: always
     networks:
       - app-network
 
@@ -53,3 +71,4 @@ networks:
 volumes:
   postgres_data:
   redis-data:
+  nats-data:
