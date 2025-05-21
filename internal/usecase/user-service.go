@@ -4,6 +4,7 @@ import (
 	"errors"
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/repo"
+	"fmt"
 	"log/slog"
 )
 
@@ -27,7 +28,7 @@ func (u UserService) CreateUser(name string, email string, role entity.UserRole)
 	user := entity.User{Name: name, Email: email, Role: role}
 	savedUser, err := u.repo.Save(user)
 	if err != nil {
-		return entity.User{}, err
+		return entity.User{}, fmt.Errorf("ошибка записи пользователя в БД: %w", err)
 	}
 
 	u.cacheRepo.InvalidateAllUsersCache()
@@ -42,12 +43,16 @@ func (u UserService) GetUser(id string) (entity.User, error) {
 	user, err := u.cacheRepo.FetchUserFromCache(id)
 	if err != nil {
 		if !errors.Is(err, &repo.ErrorUserNotFound{}) {
-			slog.Error("Не удалось получить пользователя из кеша", slog.String("error", err.Error()))
+			slog.Error("не удалось получить пользователя из кеша", slog.String("error", err.Error()))
 		}
 
 		user, err = u.repo.FindByID(id)
 		if err != nil {
-			return entity.User{}, err
+			if errors.Is(err, &repo.ErrorUserNotFound{}) {
+				return entity.User{}, err
+			}
+
+			return entity.User{}, fmt.Errorf("не удалосьполучить пользователя из БД: %w", err)
 		}
 
 		u.cacheRepo.SaveUserToCache(user)
@@ -67,7 +72,7 @@ func (u UserService) ListUsers() ([]entity.User, error) {
 
 		users, err = u.repo.FindAll()
 		if err != nil {
-			return []entity.User{}, err
+			return []entity.User{}, fmt.Errorf("не удалось получить пользоватей из БД: %w", err)
 		}
 
 		u.cacheRepo.SaveAllUsersToCache(users)
@@ -83,9 +88,10 @@ func (u UserService) RemoveUser(id string) error {
 
 	err := u.repo.DeleteByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("не удалось удалить пользоватя из БД: %w", err)
 	}
 
 	u.cacheRepo.InvalidateAllUsersCache()
+	u.cacheRepo.InvalidateUserInCache(id)
 	return nil
 }

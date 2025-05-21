@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"evrone_go_hw_5_1/internal/entity"
 	"fmt"
 	"github.com/jackc/pgx/v5"
@@ -13,8 +14,8 @@ type PostgreUserRepo struct {
 	conn *pgx.Conn
 }
 
-func NewPostgreUserRepo(conn *pgx.Conn) PostgreUserRepo {
-	return PostgreUserRepo{conn: conn}
+func NewPostgreUserRepo(conn *pgx.Conn) *PostgreUserRepo {
+	return &PostgreUserRepo{conn: conn}
 }
 
 func (p PostgreUserRepo) Save(user entity.User) (entity.User, error) {
@@ -46,7 +47,7 @@ func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
 		&user.CreatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return entity.User{}, &ErrorUserNotFound{}
 	}
 	if err != nil {

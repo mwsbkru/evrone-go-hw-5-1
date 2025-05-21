@@ -26,11 +26,11 @@ func Run(cfg *config.Config) {
 		ReadTimeout:  time.Duration(cfg.RedisTimeoutSeconds) * time.Second,
 		WriteTimeout: time.Duration(cfg.RedisTimeoutSeconds) * time.Second,
 	})
-
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		slog.Error("Не удалось подключиться к redis", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+	defer redisClient.Close()
 
 	conn, err := pgx.Connect(ctx, cfg.DbConnectionString)
 	if err != nil {

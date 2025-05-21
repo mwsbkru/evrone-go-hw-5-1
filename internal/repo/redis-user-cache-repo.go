@@ -18,8 +18,8 @@ type RedisUserCacheRepo struct {
 	cfg    *config.Config
 }
 
-func NewRedisUserCacheRepo(client *redis.Client, cfg *config.Config) RedisUserCacheRepo {
-	return RedisUserCacheRepo{client: client, cfg: cfg}
+func NewRedisUserCacheRepo(client *redis.Client, cfg *config.Config) *RedisUserCacheRepo {
+	return &RedisUserCacheRepo{client: client, cfg: cfg}
 }
 
 func (r RedisUserCacheRepo) SaveUserToCache(user entity.User) error {
@@ -100,6 +100,17 @@ func (r RedisUserCacheRepo) InvalidateAllUsersCache() error {
 	err := r.client.Del(context.Background(), cacheKey).Err()
 	if err != nil {
 		return fmt.Errorf("ошибка при удалении кеша всех пользователей: %w", err)
+	}
+
+	return nil
+}
+
+func (r RedisUserCacheRepo) InvalidateUserInCache(id string) error {
+	cacheKey := getUserCacheKey(id)
+
+	err := r.client.Del(context.Background(), cacheKey).Err()
+	if err != nil {
+		return fmt.Errorf("ошибка при удалении кеша пользователя с id %s: %w", id, err)
 	}
 
 	return nil
