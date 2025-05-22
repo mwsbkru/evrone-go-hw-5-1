@@ -14,8 +14,7 @@ import (
 	"time"
 )
 
-func Run(cfg *config.Config) {
-	ctx := context.Background()
+func Run(cfg *config.Config, ctx context.Context) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         cfg.RedisAddr,
 		Password:     cfg.RedisPassword,
@@ -51,7 +50,7 @@ func Run(cfg *config.Config) {
 	cacheRepo := repo2.NewRedisUserCacheRepo(redisClient, cfg)
 	methodCalledNotifier := repo2.NewNatsMethodCalledNotifier(natsConn, cfg)
 	userService := usecase.NewUserService(repo, cacheRepo, methodCalledNotifier)
-	server := http.NewHttpServer(cfg, userService)
+	server := http.NewServer(cfg, userService)
 
 	http.Serve(server, cfg)
 }

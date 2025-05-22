@@ -1,12 +1,15 @@
 package repo
 
-import "evrone_go_hw_5_1/internal/entity"
+import (
+	"context"
+	"evrone_go_hw_5_1/internal/entity"
+)
 
 type UserRepository interface {
-	Save(user entity.User) (entity.User, error)
-	FindByID(id string) (entity.User, error)
-	FindAll() ([]entity.User, error)
-	DeleteByID(id string) error
+	Save(ctx context.Context, user entity.User) (entity.User, error)
+	FindByID(ctx context.Context, id string) (entity.User, error)
+	FindAll(ctx context.Context) ([]entity.User, error)
+	DeleteByID(ctx context.Context, id string) error
 }
 
 type ErrorUserNotFound struct{}
@@ -16,14 +19,14 @@ func (e *ErrorUserNotFound) Error() string {
 }
 
 type UserCacheRepository interface {
-	SaveUserToCache(entity.User) error
-	FetchUserFromCache(string) (entity.User, error)
-	InvalidateUserInCache(string) error
-	SaveAllUsersToCache([]entity.User) error
-	FetchAllUsersFromCache() ([]entity.User, error)
-	InvalidateAllUsersCache() error
+	SaveUserToCache(ctx context.Context, user entity.User) error
+	FetchUserFromCache(ctx context.Context, id string) (entity.User, error)
+	InvalidateUserInCache(ctx context.Context, id string) error
+	SaveAllUsersToCache(ctx context.Context, user []entity.User) error
+	FetchAllUsersFromCache(ctx context.Context) ([]entity.User, error)
+	InvalidateAllUsersCache(ctx context.Context) error
 }
 
 type MethodCalledNotifier interface {
-	NotifyMethodCalled(string, map[string]string) error
+	NotifyMethodCalled(methodName string, params map[string]string) error
 }

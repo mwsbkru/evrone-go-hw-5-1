@@ -18,10 +18,10 @@ func NewPostgreUserRepo(conn *pgx.Conn) *PostgreUserRepo {
 	return &PostgreUserRepo{conn: conn}
 }
 
-func (p PostgreUserRepo) Save(user entity.User) (entity.User, error) {
+func (p PostgreUserRepo) Save(ctx context.Context, user entity.User) (entity.User, error) {
 	var id string
 	query := "INSERT INTO users (name, email, role) VALUES ($1, $2, $3) RETURNING id"
-	err := p.conn.QueryRow(context.Background(), query, user.Name, user.Email, user.Role).Scan(&id)
+	err := p.conn.QueryRow(ctx, query, user.Name, user.Email, user.Role).Scan(&id)
 
 	if err != nil {
 		return user, fmt.Errorf("ошибка при вставке пользователя в DB: %w", err)
@@ -31,7 +31,7 @@ func (p PostgreUserRepo) Save(user entity.User) (entity.User, error) {
 	return user, nil
 }
 
-func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
+func (p PostgreUserRepo) FindByID(ctx context.Context, id string) (entity.User, error) {
 	// типа мы долго ищем юзера
 	time.Sleep(time.Second)
 
@@ -39,7 +39,7 @@ func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
 	var user entity.User
 
 	// Выполняем запрос и сканируем результат
-	err := p.conn.QueryRow(context.Background(), query, id).Scan(
+	err := p.conn.QueryRow(ctx, query, id).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
@@ -57,13 +57,13 @@ func (p PostgreUserRepo) FindByID(id string) (entity.User, error) {
 	return user, nil
 }
 
-func (p PostgreUserRepo) FindAll() ([]entity.User, error) {
+func (p PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
 	// типа мы долго ищем юзера
 	time.Sleep(time.Second)
 
 	query := "SELECT * FROM users"
 
-	rows, err := p.conn.Query(context.Background(), query)
+	rows, err := p.conn.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при получении пользователей: %w", err)
 	}
@@ -95,10 +95,10 @@ func (p PostgreUserRepo) FindAll() ([]entity.User, error) {
 	return users, nil
 }
 
-func (p PostgreUserRepo) DeleteByID(id string) error {
+func (p PostgreUserRepo) DeleteByID(ctx context.Context, id string) error {
 	query := "DELETE FROM users WHERE id = $1"
 
-	_, err := p.conn.Exec(context.Background(), query, id)
+	_, err := p.conn.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("ошибка при удалении пользователя: %w", err)
 	}

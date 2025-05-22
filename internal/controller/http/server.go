@@ -13,16 +13,16 @@ import (
 	"net/http"
 )
 
-type HttpServer struct {
+type Server struct {
 	cfg         *config.Config
 	userService *usecase.UserService
 }
 
-func NewHttpServer(cfg *config.Config, userService *usecase.UserService) *HttpServer {
-	return &HttpServer{cfg: cfg, userService: userService}
+func NewServer(cfg *config.Config, userService *usecase.UserService) *Server {
+	return &Server{cfg: cfg, userService: userService}
 }
 
-func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {
+func (s *Server) Save(writer http.ResponseWriter, request *http.Request) {
 	var userRequest dto.SaveUserRequestBody
 	err := json.NewDecoder(request.Body).Decode(&userRequest)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	savedUser, err := s.userService.CreateUser(userRequest.Name, userRequest.Email, entity.UserRole(userRequest.Role))
+	savedUser, err := s.userService.CreateUser(request.Context(), userRequest.Name, userRequest.Email, entity.UserRole(userRequest.Role))
 	if err != nil {
 		slog.Error("Не удалось сохранить пользователя", slog.String("error", err.Error()), slog.String("email", userRequest.Email))
 		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
@@ -60,10 +60,10 @@ func (s *HttpServer) Save(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(userResponseBody)
 }
 
-func (s *HttpServer) FindByID(writer http.ResponseWriter, request *http.Request) {
+func (s *Server) FindByID(writer http.ResponseWriter, request *http.Request) {
 	userId := mux.Vars(request)["id"]
 
-	user, err := s.userService.GetUser(userId)
+	user, err := s.userService.GetUser(request.Context(), userId)
 	if err != nil {
 		if errors.Is(err, &repo.ErrorUserNotFound{}) {
 			s.respondWithError(writer, http.StatusNotFound, err.Error())
@@ -92,8 +92,8 @@ func (s *HttpServer) FindByID(writer http.ResponseWriter, request *http.Request)
 	writer.Write(userResponseBody)
 }
 
-func (s *HttpServer) FindAll(writer http.ResponseWriter, request *http.Request) {
-	users, err := s.userService.ListUsers()
+func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
+	users, err := s.userService.ListUsers(request.Context())
 	if err != nil {
 		slog.Error("Не удалось загрузить пользователей", slog.String("error", err.Error()))
 		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
@@ -123,10 +123,10 @@ func (s *HttpServer) FindAll(writer http.ResponseWriter, request *http.Request) 
 	writer.Write(usersResponseBody)
 }
 
-func (s *HttpServer) DeleteByID(writer http.ResponseWriter, request *http.Request) {
+func (s *Server) DeleteByID(writer http.ResponseWriter, request *http.Request) {
 	userId := mux.Vars(request)["id"]
 
-	err := s.userService.RemoveUser(userId)
+	err := s.userService.RemoveUser(request.Context(), userId)
 	if err != nil {
 		if errors.Is(err, &repo.ErrorUserNotFound{}) {
 			s.respondWithError(writer, http.StatusNotFound, err.Error())
@@ -141,7 +141,7 @@ func (s *HttpServer) DeleteByID(writer http.ResponseWriter, request *http.Reques
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-func (s *HttpServer) respondWithError(writer http.ResponseWriter, code int, message string) {
+func (s *Server) respondWithError(writer http.ResponseWriter, code int, message string) {
 	errorObject := dto.ErrorResponse{
 		Code:    code,
 		Message: message,

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func Serve(server *HttpServer, cfg *config.Config) {
+func Serve(server *Server, cfg *config.Config) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/users", server.Save).Methods(http.MethodPost)
