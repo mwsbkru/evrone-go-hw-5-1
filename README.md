@@ -6,3 +6,7 @@
 с использованием каждого из репозиториев
 
 `docker compose build && docker compose up`
+
+
+
+mockgen -source=internal/repo/contracts.go -destination=internal/repo/contracts_mocks.go
