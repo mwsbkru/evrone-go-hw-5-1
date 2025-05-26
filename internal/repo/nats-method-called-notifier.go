@@ -33,8 +33,6 @@ func (n NatsMethodCalledNotifier) NotifyMethodCalled(method string, params map[s
 		return fmt.Errorf("не удалось сериализовать сообщение для отправки в Nats: %w", err)
 	}
 
-	// Отправляем сообщение
-
 	if err := n.conn.Publish(n.cfg.NatsMethodCalledSubject, msg); err != nil {
 		return fmt.Errorf("не удалось отправить сообщение в Nats: %w", err)
 	}

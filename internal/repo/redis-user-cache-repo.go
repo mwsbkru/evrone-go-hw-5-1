@@ -24,18 +24,18 @@ func NewRedisUserCacheRepo(client *redis.Client, cfg *config.Config) *RedisUserC
 
 func (r RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.User) error {
 	if user.ID == "" {
-		return errors.New("ошибка при сериализации пользователя для кеширования: у пользователя нет ID")
+		return errors.New("ошибка при сериализации пользователя для кеширования в Redis: у пользователя нет ID")
 	}
 
 	cacheKey := getUserCacheKey(user.ID)
 	userJSON, err := json.Marshal(user)
 	if err != nil {
-		return fmt.Errorf("ошибка при сериализации пользователя для кеширования: %w", err)
+		return fmt.Errorf("ошибка при сериализации пользователя для кеширования в Redis: %w", err)
 	}
 
 	err = r.client.Set(ctx, cacheKey, userJSON, time.Duration(r.cfg.CacheLifetime)*time.Second).Err()
 	if err != nil {
-		return fmt.Errorf("ошибка при сохранения пользователя в кеше: %w", err)
+		return fmt.Errorf("ошибка при сохранения пользователя в кеше Redis: %w", err)
 	}
 
 	return nil
@@ -45,12 +45,12 @@ func (r RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []ent
 	cacheKey := getUsersCacheKey()
 	usersJSON, err := json.Marshal(users)
 	if err != nil {
-		return fmt.Errorf("ошибка при сериализации пользователей для кеширования: %w", err)
+		return fmt.Errorf("ошибка при сериализации пользователей для кеширования в Redis: %w", err)
 	}
 
 	err = r.client.Set(ctx, cacheKey, usersJSON, time.Duration(r.cfg.CacheLifetime)*time.Second).Err()
 	if err != nil {
-		return fmt.Errorf("ошибка при сохранения пользователей в кеше: %w", err)
+		return fmt.Errorf("ошибка при сохранения пользователей в кеше Redis: %w", err)
 	}
 
 	return nil
@@ -63,13 +63,13 @@ func (r RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (
 		if err == redis.Nil {
 			return entity.User{}, &ErrorUserNotFound{}
 		}
-		return entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша: %w", err)
+		return entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша Redis: %w", err)
 	}
 
 	var user entity.User
 	err = json.Unmarshal([]byte(userJson), &user)
 	if err != nil {
-		return entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша: %w", err)
+		return entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша Redis: %w", err)
 	}
 
 	return user, nil
@@ -83,13 +83,13 @@ func (r RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entit
 		if err == redis.Nil {
 			return []entity.User{}, &ErrorUserNotFound{}
 		}
-		return []entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша: %w", err)
+		return []entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша Redis: %w", err)
 	}
 
 	var users []entity.User
 	err = json.Unmarshal([]byte(usersJson), &users)
 	if err != nil {
-		return []entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша: %w", err)
+		return []entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша Redis: %w", err)
 	}
 
 	return users, nil
@@ -99,7 +99,7 @@ func (r RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
 	cacheKey := getUsersCacheKey()
 	err := r.client.Del(ctx, cacheKey).Err()
 	if err != nil {
-		return fmt.Errorf("ошибка при удалении кеша всех пользователей: %w", err)
+		return fmt.Errorf("ошибка при удалении кеша Redis всех пользователей: %w", err)
 	}
 
 	return nil
@@ -110,7 +110,7 @@ func (r RedisUserCacheRepo) InvalidateUserInCache(ctx context.Context, id string
 
 	err := r.client.Del(ctx, cacheKey).Err()
 	if err != nil {
-		return fmt.Errorf("ошибка при удалении кеша пользователя с id %s: %w", id, err)
+		return fmt.Errorf("ошибка при удалении кеша Redis пользователя с id %s: %w", id, err)
 	}
 
 	return nil

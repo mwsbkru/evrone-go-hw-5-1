@@ -7,7 +7,6 @@ import (
 	"evrone_go_hw_5_1/internal/entity"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"time"
 )
 
 type PostgreUserRepo struct {
@@ -32,13 +31,9 @@ func (p PostgreUserRepo) Save(ctx context.Context, user entity.User) (entity.Use
 }
 
 func (p PostgreUserRepo) FindByID(ctx context.Context, id string) (entity.User, error) {
-	// типа мы долго ищем юзера
-	time.Sleep(time.Second)
-
 	query := "SELECT * from users WHERE id = $1"
 	var user entity.User
 
-	// Выполняем запрос и сканируем результат
 	err := p.conn.QueryRow(ctx, query, id).Scan(
 		&user.ID,
 		&user.Name,
@@ -51,21 +46,18 @@ func (p PostgreUserRepo) FindByID(ctx context.Context, id string) (entity.User, 
 		return entity.User{}, &ErrorUserNotFound{}
 	}
 	if err != nil {
-		return entity.User{}, err
+		return entity.User{}, fmt.Errorf("не удалось получить пользователя из БД: %w", err)
 	}
 
 	return user, nil
 }
 
 func (p PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
-	// типа мы долго ищем юзера
-	time.Sleep(time.Second)
-
 	query := "SELECT * FROM users"
 
 	rows, err := p.conn.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при получении пользователей: %w", err)
+		return nil, fmt.Errorf("ошибка при получении пользователей из БД: %w", err)
 	}
 	defer rows.Close()
 
@@ -82,14 +74,14 @@ func (p PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
 			&user.CreatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при получении пользователей, сканированиe строки: %w", err)
+			return nil, fmt.Errorf("ошибка при получении пользователей из БД, сканированиe строки: %w", err)
 		}
 
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("ошибка при получении пользователей, ошибка при обработке строк: %w", err)
+		return nil, fmt.Errorf("ошибка при получении пользователей из БД, ошибка при обработке строк: %w", err)
 	}
 
 	return users, nil
@@ -100,7 +92,7 @@ func (p PostgreUserRepo) DeleteByID(ctx context.Context, id string) error {
 
 	_, err := p.conn.Exec(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("ошибка при удалении пользователя: %w", err)
+		return fmt.Errorf("ошибка при удалении пользователя из БД: %w", err)
 	}
 
 	return nil
