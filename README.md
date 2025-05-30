@@ -10,3 +10,4 @@
 
 
 mockgen -source=internal/repo/contracts.go -destination=internal/repo/contracts_mocks.go
+mockgen -source=internal/usecase/user-service.go -destination=internal/usecase/user-service-mock.go

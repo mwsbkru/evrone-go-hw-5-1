@@ -7,7 +7,6 @@ import (
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/entity/dto"
 	"evrone_go_hw_5_1/internal/repo"
-	"evrone_go_hw_5_1/internal/usecase"
 	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
@@ -15,10 +14,10 @@ import (
 
 type Server struct {
 	cfg         *config.Config
-	userService *usecase.UserService
+	userService UserService
 }
 
-func NewServer(cfg *config.Config, userService *usecase.UserService) *Server {
+func NewServer(cfg *config.Config, userService UserService) *Server {
 	return &Server{cfg: cfg, userService: userService}
 }
 
