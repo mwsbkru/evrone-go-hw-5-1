@@ -3,13 +3,10 @@ GOOSE_MIGRATIONS_DIR := db/migrations
 
 default: run
 
-
-# Отладка make create-migration name=create_users --just-print
+# запуск приложения
 run:
 	@echo "Запуск приложения..."
 	@docker compose build && docker compose up
-
-# Дополнительные цели
 
 # Создание новой миграции
 # пример запуска: make create-migration name=create_users
@@ -24,28 +21,16 @@ migration-up:
 	@goose -dir $(GOOSE_MIGRATIONS_DIR) postgres "postgresql://hw:hw@db.evrone-go-hw-5-1.orb.local:5432/hw?sslmode=disable" up
 
 # Запуск миграций
-# пример запуска: make migration-up
+# пример запуска: make migration-down
 migration-down:
 	@echo "Откат миграции..."
 	@goose -dir $(GOOSE_MIGRATIONS_DIR) postgres "postgresql://hw:hw@db.evrone-go-hw-5-1.orb.local:5432/hw?sslmode=disable" down
 
-
-
-
 # Запуск тестов
+# пример запуска: make test
 test:
 	@echo "Запуск тестов..."
 	@go test ./... -coverprofile cover.out && go tool cover -html=cover.out
-
-# Форматирование кода
-format:
-	@echo "Форматирование кода..."
-	@cd $(CMD_DIR) && go fmt ./...
-
-# Очистка бинарей
-clean:
-	@echo "Очистка бинарей..."
-	@cd $(CMD_DIR) && rm -f users-manager
 
 # Помощь по доступным командам
 help:

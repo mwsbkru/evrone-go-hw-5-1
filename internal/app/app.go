@@ -17,9 +17,7 @@ import (
 func Run(cfg *config.Config, ctx context.Context) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         cfg.RedisAddr,
-		Password:     cfg.RedisPassword,
 		DB:           cfg.RedisDB,
-		Username:     cfg.RedisUserName,
 		MaxRetries:   cfg.RedisMaxRetries,
 		DialTimeout:  time.Duration(cfg.RedisTimeoutSeconds) * time.Second,
 		ReadTimeout:  time.Duration(cfg.RedisTimeoutSeconds) * time.Second,

@@ -11,10 +11,7 @@ services:
       - nats
     environment:
       - DB_CONNECTION_STRING=postgresql://hw:hw@db:5432/hw
-      - DB_PASSWORD=hw
       - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=hw
-      - REDIS_USERNAME=hw
       - REDIS_DB=0
       - NATS_URL=nats://nats:4222
     networks:
@@ -38,15 +35,11 @@ services:
 
   redis:
     image: redis:7.2.4
-    command: ["redis-server", "/etc/redis/redis.conf"]
+    command: ["redis-server"]
     ports:
       - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=hw
-      - REDIS_USERNAME=hw
     volumes:
       - redis-data:/data
-      - ./redis.conf:/etc/redis/redis.conf
     networks:
       - app-network
 

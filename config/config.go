@@ -11,8 +11,6 @@ type Config struct {
 	Port                    string `env:"PORT" env-default:"8080"`
 	DbConnectionString      string `env:"DB_CONNECTION_STRING"`
 	RedisAddr               string `env:"REDIS_ADDR"`
-	RedisUserName           string `env:"REDIS_USERNAME"`
-	RedisPassword           string `env:"REDIS_PASSWORD"`
 	RedisDB                 int    `env:"REDIS_DB"`
 	RedisMaxRetries         int    `env:"HOST" env-default:"5"`
 	RedisTimeoutSeconds     int    `env:"HOST" env-default:"5"`
