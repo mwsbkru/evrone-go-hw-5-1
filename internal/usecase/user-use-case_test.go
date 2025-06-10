@@ -18,7 +18,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	mockCache := repo.NewMockUserCacheRepository(ctrl)
 	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
 
-	userService := usecase.NewUserService(mockRepo, mockCache, mockNotifier)
+	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
 	// Успешный кейс создания пользователя
 	mockNotifier.EXPECT().NotifyMethodCalled("CreateUser", map[string]string{
@@ -61,7 +61,7 @@ func TestUserService_GetUser(t *testing.T) {
 	mockCache := repo.NewMockUserCacheRepository(ctrl)
 	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
 
-	userService := usecase.NewUserService(mockRepo, mockCache, mockNotifier)
+	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
 	// Случай 1: Пользователь найден в кеше
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
@@ -83,7 +83,7 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "456",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "456").Return(entity.User{}, &repo.ErrorUserNotFound{})
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "456").Return(entity.User{}, &usecase.ErrUserNotFound{})
 	mockRepo.EXPECT().FindByID(context.Background(), "456").Return(entity.User{
 		ID: "456", Name: "DB User", Email: "db@example.com", Role: entity.UserRoleAdmin,
 	}, nil)
@@ -103,12 +103,12 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "789",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &repo.ErrorUserNotFound{})
-	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(entity.User{}, &repo.ErrorUserNotFound{})
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
+	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
 
 	_, err = userService.GetUser(context.Background(), "789")
 	if err == nil {
-		t.Error("Expected ErrorUserNotFound, got nil")
+		t.Error("Expected ErrUserNotFound, got nil")
 	}
 
 	// Случай 4: Ошибка при получении из кеша
@@ -137,7 +137,7 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "789",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &repo.ErrorUserNotFound{})
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
 	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(entity.User{}, errors.New("db error"))
 
 	_, err = userService.GetUser(context.Background(), "789")
@@ -154,7 +154,7 @@ func TestUserService_ListUsers(t *testing.T) {
 	mockCache := repo.NewMockUserCacheRepository(ctrl)
 	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
 
-	userService := usecase.NewUserService(mockRepo, mockCache, mockNotifier)
+	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
 	// Случай 1: Пользователи найдены в кеше
 	mockNotifier.EXPECT().NotifyMethodCalled("ListUsers", map[string]string{})
@@ -193,7 +193,7 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	// Случай 3: Ошибка при получении пользователей из БД
 	mockNotifier.EXPECT().NotifyMethodCalled("ListUsers", map[string]string{})
-	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]entity.User{}, &repo.ErrorUserNotFound{})
+	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]entity.User{}, &usecase.ErrUserNotFound{})
 	mockRepo.EXPECT().FindAll(context.Background()).Return([]entity.User{}, errors.New("database error"))
 
 	_, err = userService.ListUsers(context.Background())
@@ -210,7 +210,7 @@ func TestUserService_RemoveUser(t *testing.T) {
 	mockCache := repo.NewMockUserCacheRepository(ctrl)
 	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
 
-	userService := usecase.NewUserService(mockRepo, mockCache, mockNotifier)
+	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
 	// Успешное удаление пользователя
 	mockNotifier.EXPECT().NotifyMethodCalled("RemoveUser", map[string]string{

@@ -14,7 +14,8 @@ import (
 	"time"
 )
 
-func Run(cfg *config.Config, ctx context.Context) {
+// Run initializes and runs application
+func Run(ctx context.Context, cfg *config.Config) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         cfg.RedisAddr,
 		DB:           cfg.RedisDB,
@@ -36,9 +37,9 @@ func Run(cfg *config.Config, ctx context.Context) {
 	}
 	defer conn.Close(ctx)
 
-	natsConn, err := nats.Connect(cfg.NatsUrl)
+	natsConn, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
-		slog.Warn(cfg.NatsUrl)
+		slog.Warn(cfg.NatsURL)
 		slog.Error("не удалось подключиться к Nats", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
@@ -47,7 +48,7 @@ func Run(cfg *config.Config, ctx context.Context) {
 	repo := repo2.NewPostgreUserRepo(conn)
 	cacheRepo := repo2.NewRedisUserCacheRepo(redisClient, cfg)
 	methodCalledNotifier := repo2.NewNatsMethodCalledNotifier(natsConn, cfg)
-	userService := usecase.NewUserService(repo, cacheRepo, methodCalledNotifier)
+	userService := usecase.NewUserUseCase(repo, cacheRepo, methodCalledNotifier)
 	server := http.NewServer(cfg, userService)
 
 	http.Serve(server, cfg)

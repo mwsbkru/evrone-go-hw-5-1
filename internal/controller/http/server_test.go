@@ -9,7 +9,7 @@ import (
 	http2 "evrone_go_hw_5_1/internal/controller/http"
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/entity/dto"
-	"evrone_go_hw_5_1/internal/repo"
+	"evrone_go_hw_5_1/internal/usecase"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -182,7 +182,7 @@ func TestFindByID(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		mockService := &MockUserService{
 			GetUserFunc: func(ctx context.Context, id string) (entity.User, error) {
-				return entity.User{}, &repo.ErrorUserNotFound{}
+				return entity.User{}, &usecase.ErrUserNotFound{}
 			},
 		}
 
@@ -308,7 +308,7 @@ func TestDeleteByID(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		mockService := &MockUserService{
 			RemoveUserFunc: func(ctx context.Context, id string) error {
-				return &repo.ErrorUserNotFound{}
+				return &usecase.ErrUserNotFound{}
 			},
 		}
 

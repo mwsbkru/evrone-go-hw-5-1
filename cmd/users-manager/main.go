@@ -19,7 +19,7 @@ func main() {
 		slog.Error("Не удалось загрузить конфигурацию приложения", slog.String("error", err.Error()))
 	}
 
-	app.Run(cfg, ctx)
+	app.Run(ctx, cfg)
 
 	// TODO привести в порядок makefile и readme
 }

@@ -4,22 +4,24 @@ import (
 	"context"
 	"errors"
 	"evrone_go_hw_5_1/internal/entity"
-	"evrone_go_hw_5_1/internal/repo"
 	"fmt"
 	"log/slog"
 )
 
-type UserService struct {
-	repo                 repo.UserRepository
-	cacheRepo            repo.UserCacheRepository
-	methodCallerNotifier repo.MethodCalledNotifier
+// UserUseCase implements business logic for users CRUD
+type UserUseCase struct {
+	repo                 UserRepository
+	cacheRepo            UserCacheRepository
+	methodCallerNotifier MethodCalledNotifier
 }
 
-func NewUserService(repo repo.UserRepository, cacheRepo repo.UserCacheRepository, methodCallerNotifier repo.MethodCalledNotifier) *UserService {
-	return &UserService{repo: repo, cacheRepo: cacheRepo, methodCallerNotifier: methodCallerNotifier}
+// NewUserUseCase returns new User use case
+func NewUserUseCase(repo UserRepository, cacheRepo UserCacheRepository, methodCallerNotifier MethodCalledNotifier) *UserUseCase {
+	return &UserUseCase{repo: repo, cacheRepo: cacheRepo, methodCallerNotifier: methodCallerNotifier}
 }
 
-func (u UserService) CreateUser(ctx context.Context, name string, email string, role entity.UserRole) (entity.User, error) {
+// CreateUser implements business logic for create new user and save it in db
+func (u *UserUseCase) CreateUser(ctx context.Context, name string, email string, role entity.UserRole) (entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("CreateUser", map[string]string{
 		"name":  name,
 		"email": email,
@@ -36,20 +38,21 @@ func (u UserService) CreateUser(ctx context.Context, name string, email string, 
 	return savedUser, nil
 }
 
-func (u UserService) GetUser(ctx context.Context, id string) (entity.User, error) {
+// GetUser implements business logic for fetch user with passed id from db
+func (u *UserUseCase) GetUser(ctx context.Context, id string) (entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("GetUser", map[string]string{
 		"id": id,
 	})
 
 	user, err := u.cacheRepo.FetchUserFromCache(ctx, id)
 	if err != nil {
-		if !errors.Is(err, &repo.ErrorUserNotFound{}) {
+		if !errors.Is(err, &ErrUserNotFound{}) {
 			slog.Error("не удалось получить пользователя из кеша", slog.String("error", err.Error()))
 		}
 
 		user, err = u.repo.FindByID(ctx, id)
 		if err != nil {
-			if errors.Is(err, &repo.ErrorUserNotFound{}) {
+			if errors.Is(err, &ErrUserNotFound{}) {
 				return entity.User{}, err
 			}
 
@@ -62,12 +65,13 @@ func (u UserService) GetUser(ctx context.Context, id string) (entity.User, error
 	return user, err
 }
 
-func (u UserService) ListUsers(ctx context.Context) ([]entity.User, error) {
+// ListUsers implements business logic for fetch all users from db
+func (u *UserUseCase) ListUsers(ctx context.Context) ([]entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("ListUsers", map[string]string{})
 
 	users, err := u.cacheRepo.FetchAllUsersFromCache(ctx)
 	if err != nil {
-		if !errors.Is(err, &repo.ErrorUserNotFound{}) {
+		if !errors.Is(err, &ErrUserNotFound{}) {
 			slog.Error("Не удалось получить пользователей из кеша", slog.String("error", err.Error()))
 		}
 
@@ -82,7 +86,8 @@ func (u UserService) ListUsers(ctx context.Context) ([]entity.User, error) {
 	return users, err
 }
 
-func (u UserService) RemoveUser(ctx context.Context, id string) error {
+// RemoveUser implements business logic for remove user from db
+func (u *UserUseCase) RemoveUser(ctx context.Context, id string) error {
 	u.methodCallerNotifier.NotifyMethodCalled("RemoveUser", map[string]string{
 		"id": id,
 	})

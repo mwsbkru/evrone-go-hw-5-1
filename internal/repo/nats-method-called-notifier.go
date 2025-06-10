@@ -8,6 +8,7 @@ import (
 	"log/slog"
 )
 
+// NatsMethodCalledNotifier provides functionality for notification about events via Nats
 type NatsMethodCalledNotifier struct {
 	conn *nats.Conn
 	cfg  *config.Config
@@ -18,10 +19,12 @@ type notificationType struct {
 	Params map[string]string `json:"params"`
 }
 
+// NewNatsMethodCalledNotifier returns new NatsMethodCalledNotifier
 func NewNatsMethodCalledNotifier(conn *nats.Conn, cfg *config.Config) *NatsMethodCalledNotifier {
 	return &NatsMethodCalledNotifier{conn: conn, cfg: cfg}
 }
 
+// NotifyMethodCalled sends notification about method was called to Nats
 func (n NatsMethodCalledNotifier) NotifyMethodCalled(method string, params map[string]string) error {
 	notification := notificationType{
 		Method: method,

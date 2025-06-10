@@ -3,24 +3,27 @@ package http
 import (
 	"evrone_go_hw_5_1/config"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 )
 
+// Serve configures routes and runs http-server
 func Serve(server *Server, cfg *config.Config) {
-	router := mux.NewRouter()
+	router := http.NewServeMux()
 
-	router.HandleFunc("/users", server.Save).Methods(http.MethodPost)
-	router.HandleFunc("/users/{id}", server.FindByID).Methods(http.MethodGet)
-	router.HandleFunc("/users", server.FindAll).Methods(http.MethodGet)
-	router.HandleFunc("/users/{id}", server.DeleteByID).Methods(http.MethodDelete)
+	router.HandleFunc("POST /users", server.Save)
+	router.HandleFunc("GET /users/{id}", server.FindByID)
+	router.HandleFunc("GET /users", server.FindAll)
+	router.HandleFunc("DELETE /users/{id}", server.DeleteByID)
 
-	router.Use(loggingMiddleware)
-	router.Use(defaultHeadersMiddleware)
+	withMiddlewaresRouter := loggingMiddleware(defaultHeadersMiddleware(router))
 
-	srv := &http.Server{Handler: router, Addr: fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)}
-	slog.Error(srv.ListenAndServe().Error())
+	srv := &http.Server{Handler: withMiddlewaresRouter, Addr: fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)}
+
+	err := srv.ListenAndServe()
+	if err != nil {
+		slog.Error("srv.ListenAndServe", "err", err)
+	}
 }
 
 func defaultHeadersMiddleware(next http.Handler) http.Handler {

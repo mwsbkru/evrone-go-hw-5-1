@@ -6,6 +6,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+// Config Main config of application
 type Config struct {
 	Host                    string `env:"HOST" env-default:"0.0.0.0"`
 	Port                    string `env:"PORT" env-default:"8080"`
@@ -15,10 +16,11 @@ type Config struct {
 	RedisMaxRetries         int    `env:"HOST" env-default:"5"`
 	RedisTimeoutSeconds     int    `env:"HOST" env-default:"5"`
 	CacheLifetime           int    `env:"CACHE_LIFE_TIME" env-default:"60"`
-	NatsUrl                 string `env:"NATS_URL"`
+	NatsURL                 string `env:"NATS_URL"`
 	NatsMethodCalledSubject string `env:"NATS_METHOD_CALLED_SUBJECT" env-default:"method_called"`
 }
 
+// NewConfig returns initialized config
 func NewConfig() (*Config, error) {
 	var cfg Config
 

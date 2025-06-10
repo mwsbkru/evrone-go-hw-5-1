@@ -6,22 +6,26 @@ import (
 	"errors"
 	"evrone_go_hw_5_1/config"
 	"evrone_go_hw_5_1/internal/entity"
+	"evrone_go_hw_5_1/internal/usecase"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
 
-const USERS_CACHE_KEY = "cache-entity.Users"
+const usersCacheKey = "cache-entity.Users"
 
+// RedisUserCacheRepo provides functionality for operating users in Redis based cache
 type RedisUserCacheRepo struct {
 	client *redis.Client
 	cfg    *config.Config
 }
 
+// NewRedisUserCacheRepo returns new Redis UserCacheRepo
 func NewRedisUserCacheRepo(client *redis.Client, cfg *config.Config) *RedisUserCacheRepo {
 	return &RedisUserCacheRepo{client: client, cfg: cfg}
 }
 
+// SaveUserToCache stores user in cache
 func (r RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.User) error {
 	if user.ID == "" {
 		return errors.New("ошибка при сериализации пользователя для кеширования в Redis: у пользователя нет ID")
@@ -41,6 +45,7 @@ func (r RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.Use
 	return nil
 }
 
+// SaveAllUsersToCache stores users in cache
 func (r RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []entity.User) error {
 	cacheKey := getUsersCacheKey()
 	usersJSON, err := json.Marshal(users)
@@ -56,18 +61,19 @@ func (r RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []ent
 	return nil
 }
 
+// FetchUserFromCache fetches user from cache
 func (r RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (entity.User, error) {
 	cacheKey := getUserCacheKey(id)
-	userJson, err := r.client.Get(ctx, cacheKey).Result()
+	userJSON, err := r.client.Get(ctx, cacheKey).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return entity.User{}, &ErrorUserNotFound{}
+			return entity.User{}, &usecase.ErrUserNotFound{}
 		}
 		return entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша Redis: %w", err)
 	}
 
 	var user entity.User
-	err = json.Unmarshal([]byte(userJson), &user)
+	err = json.Unmarshal([]byte(userJSON), &user)
 	if err != nil {
 		return entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша Redis: %w", err)
 	}
@@ -75,19 +81,20 @@ func (r RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (
 	return user, nil
 }
 
+// FetchAllUsersFromCache fetches users from cache
 func (r RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entity.User, error) {
 	cacheKey := getUsersCacheKey()
 
-	usersJson, err := r.client.Get(ctx, cacheKey).Result()
+	usersJSON, err := r.client.Get(ctx, cacheKey).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return []entity.User{}, &ErrorUserNotFound{}
+			return []entity.User{}, &usecase.ErrUserNotFound{}
 		}
 		return []entity.User{}, fmt.Errorf("ошибка при получении пользователя из кеша Redis: %w", err)
 	}
 
 	var users []entity.User
-	err = json.Unmarshal([]byte(usersJson), &users)
+	err = json.Unmarshal([]byte(usersJSON), &users)
 	if err != nil {
 		return []entity.User{}, fmt.Errorf("ошибка при десериализации пользователя из кеша Redis: %w", err)
 	}
@@ -95,6 +102,7 @@ func (r RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entit
 	return users, nil
 }
 
+// InvalidateAllUsersCache removes users cache
 func (r RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
 	cacheKey := getUsersCacheKey()
 	err := r.client.Del(ctx, cacheKey).Err()
@@ -105,6 +113,7 @@ func (r RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
 	return nil
 }
 
+// InvalidateUserInCache removes user with passed id from cache
 func (r RedisUserCacheRepo) InvalidateUserInCache(ctx context.Context, id string) error {
 	cacheKey := getUserCacheKey(id)
 
@@ -116,10 +125,10 @@ func (r RedisUserCacheRepo) InvalidateUserInCache(ctx context.Context, id string
 	return nil
 }
 
-func getUserCacheKey(userId string) string {
-	return fmt.Sprintf("cache-entity.User-%s", userId)
+func getUserCacheKey(userID string) string {
+	return fmt.Sprintf("cache-entity.User-%s", userID)
 }
 
 func getUsersCacheKey() string {
-	return USERS_CACHE_KEY
+	return usersCacheKey
 }

@@ -6,26 +6,28 @@ import (
 	"evrone_go_hw_5_1/config"
 	"evrone_go_hw_5_1/internal/entity"
 	"evrone_go_hw_5_1/internal/entity/dto"
-	"evrone_go_hw_5_1/internal/repo"
-	"github.com/gorilla/mux"
+	"evrone_go_hw_5_1/internal/usecase"
 	"log/slog"
 	"net/http"
 )
 
+// Server is a http server
 type Server struct {
 	cfg         *config.Config
-	userService UserService
+	userService UserUseCase
 }
 
-func NewServer(cfg *config.Config, userService UserService) *Server {
+// NewServer returns new server
+func NewServer(cfg *config.Config, userService UserUseCase) *Server {
 	return &Server{cfg: cfg, userService: userService}
 }
 
+// Save handles save user action
 func (s *Server) Save(writer http.ResponseWriter, request *http.Request) {
 	var userRequest dto.SaveUserRequestBody
 	err := json.NewDecoder(request.Body).Decode(&userRequest)
 	if err != nil {
-		slog.Error("Не удалось распарсить тело запроса", slog.String("error", err.Error()))
+		slog.Warn("Не удалось распарсить тело запроса", slog.String("error", err.Error()))
 		s.respondWithError(writer, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -49,7 +51,7 @@ func (s *Server) Save(writer http.ResponseWriter, request *http.Request) {
 		Role:  string(savedUser.Role),
 	}
 
-	userResponseBody, err := json.Marshal(userResponseObject)
+	userResponseBody, err := json.Marshal(&userResponseObject)
 	if err != nil {
 		slog.Error("Не удалось сформировать тело ответа", slog.String("error", err.Error()))
 		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
@@ -59,12 +61,13 @@ func (s *Server) Save(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(userResponseBody)
 }
 
+// FindByID handles find user by id action
 func (s *Server) FindByID(writer http.ResponseWriter, request *http.Request) {
-	userId := mux.Vars(request)["id"]
+	userID := request.PathValue("id")
 
-	user, err := s.userService.GetUser(request.Context(), userId)
+	user, err := s.userService.GetUser(request.Context(), userID)
 	if err != nil {
-		if errors.Is(err, &repo.ErrorUserNotFound{}) {
+		if errors.Is(err, &usecase.ErrUserNotFound{}) {
 			s.respondWithError(writer, http.StatusNotFound, err.Error())
 			return
 		}
@@ -91,6 +94,7 @@ func (s *Server) FindByID(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(userResponseBody)
 }
 
+// FindAll handles get all users action
 func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
 	users, err := s.userService.ListUsers(request.Context())
 	if err != nil {
@@ -99,7 +103,7 @@ func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	usersResponseList := make([]dto.UserResponseBody, 0, len(users))
+	usersResponseList := make([]*dto.UserResponseBody, 0, len(users))
 	for i := range users {
 		user := dto.UserResponseBody{
 			ID:    users[i].ID,
@@ -107,7 +111,7 @@ func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
 			Email: users[i].Email,
 			Role:  string(users[i].Role),
 		}
-		usersResponseList = append(usersResponseList, user)
+		usersResponseList = append(usersResponseList, &user)
 	}
 
 	usersResponse := dto.UsersResponseBody{Data: usersResponseList}
@@ -122,12 +126,13 @@ func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(usersResponseBody)
 }
 
+// DeleteByID handles delete user by id action
 func (s *Server) DeleteByID(writer http.ResponseWriter, request *http.Request) {
-	userId := mux.Vars(request)["id"]
+	userID := request.PathValue("id")
 
-	err := s.userService.RemoveUser(request.Context(), userId)
+	err := s.userService.RemoveUser(request.Context(), userID)
 	if err != nil {
-		if errors.Is(err, &repo.ErrorUserNotFound{}) {
+		if errors.Is(err, &usecase.ErrUserNotFound{}) {
 			s.respondWithError(writer, http.StatusNotFound, err.Error())
 			return
 		}

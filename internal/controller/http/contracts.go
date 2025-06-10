@@ -5,7 +5,8 @@ import (
 	"evrone_go_hw_5_1/internal/entity"
 )
 
-type UserService interface {
+// UserUseCase describes UserUseCase functionality
+type UserUseCase interface {
 	CreateUser(ctx context.Context, name string, email string, role entity.UserRole) (entity.User, error)
 	GetUser(ctx context.Context, id string) (entity.User, error)
 	ListUsers(ctx context.Context) ([]entity.User, error)
