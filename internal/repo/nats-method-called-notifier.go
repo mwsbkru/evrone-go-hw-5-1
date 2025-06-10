@@ -25,7 +25,7 @@ func NewNatsMethodCalledNotifier(conn *nats.Conn, cfg *config.Config) *NatsMetho
 }
 
 // NotifyMethodCalled sends notification about method was called to Nats
-func (n NatsMethodCalledNotifier) NotifyMethodCalled(method string, params map[string]string) error {
+func (n *NatsMethodCalledNotifier) NotifyMethodCalled(method string, params map[string]string) error {
 	notification := notificationType{
 		Method: method,
 		Params: params,

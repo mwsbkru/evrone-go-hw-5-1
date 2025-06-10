@@ -26,7 +26,7 @@ func NewRedisUserCacheRepo(client *redis.Client, cfg *config.Config) *RedisUserC
 }
 
 // SaveUserToCache stores user in cache
-func (r RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.User) error {
+func (r *RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.User) error {
 	if user.ID == "" {
 		return errors.New("ошибка при сериализации пользователя для кеширования в Redis: у пользователя нет ID")
 	}
@@ -46,7 +46,7 @@ func (r RedisUserCacheRepo) SaveUserToCache(ctx context.Context, user entity.Use
 }
 
 // SaveAllUsersToCache stores users in cache
-func (r RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []entity.User) error {
+func (r *RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []entity.User) error {
 	cacheKey := getUsersCacheKey()
 	usersJSON, err := json.Marshal(users)
 	if err != nil {
@@ -62,7 +62,7 @@ func (r RedisUserCacheRepo) SaveAllUsersToCache(ctx context.Context, users []ent
 }
 
 // FetchUserFromCache fetches user from cache
-func (r RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (entity.User, error) {
+func (r *RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (entity.User, error) {
 	cacheKey := getUserCacheKey(id)
 	userJSON, err := r.client.Get(ctx, cacheKey).Result()
 	if err != nil {
@@ -82,7 +82,7 @@ func (r RedisUserCacheRepo) FetchUserFromCache(ctx context.Context, id string) (
 }
 
 // FetchAllUsersFromCache fetches users from cache
-func (r RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entity.User, error) {
+func (r *RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entity.User, error) {
 	cacheKey := getUsersCacheKey()
 
 	usersJSON, err := r.client.Get(ctx, cacheKey).Result()
@@ -103,7 +103,7 @@ func (r RedisUserCacheRepo) FetchAllUsersFromCache(ctx context.Context) ([]entit
 }
 
 // InvalidateAllUsersCache removes users cache
-func (r RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
+func (r *RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
 	cacheKey := getUsersCacheKey()
 	err := r.client.Del(ctx, cacheKey).Err()
 	if err != nil {
@@ -114,7 +114,7 @@ func (r RedisUserCacheRepo) InvalidateAllUsersCache(ctx context.Context) error {
 }
 
 // InvalidateUserInCache removes user with passed id from cache
-func (r RedisUserCacheRepo) InvalidateUserInCache(ctx context.Context, id string) error {
+func (r *RedisUserCacheRepo) InvalidateUserInCache(ctx context.Context, id string) error {
 	cacheKey := getUserCacheKey(id)
 
 	err := r.client.Del(ctx, cacheKey).Err()
