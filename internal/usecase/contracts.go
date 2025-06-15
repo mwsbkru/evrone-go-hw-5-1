@@ -7,19 +7,19 @@ import (
 
 // UserRepository describes functionality for operating users in DB
 type UserRepository interface {
-	Save(ctx context.Context, user entity.User) (entity.User, error)
-	FindByID(ctx context.Context, id string) (entity.User, error)
-	FindAll(ctx context.Context) ([]entity.User, error)
+	Save(ctx context.Context, user *entity.User) (*entity.User, error)
+	FindByID(ctx context.Context, id string) (*entity.User, error)
+	FindAll(ctx context.Context) ([]*entity.User, error)
 	DeleteByID(ctx context.Context, id string) error
 }
 
 // UserCacheRepository describes functionality for operating users in cache
 type UserCacheRepository interface {
-	SaveUserToCache(ctx context.Context, user entity.User) error
-	FetchUserFromCache(ctx context.Context, id string) (entity.User, error)
+	SaveUserToCache(ctx context.Context, user *entity.User) error
+	FetchUserFromCache(ctx context.Context, id string) (*entity.User, error)
 	InvalidateUserInCache(ctx context.Context, id string) error
-	SaveAllUsersToCache(ctx context.Context, user []entity.User) error
-	FetchAllUsersFromCache(ctx context.Context) ([]entity.User, error)
+	SaveAllUsersToCache(ctx context.Context, user []*entity.User) error
+	FetchAllUsersFromCache(ctx context.Context) ([]*entity.User, error)
 	InvalidateAllUsersCache(ctx context.Context) error
 }
 

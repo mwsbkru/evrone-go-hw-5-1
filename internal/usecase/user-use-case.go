@@ -21,17 +21,17 @@ func NewUserUseCase(repo UserRepository, cacheRepo UserCacheRepository, methodCa
 }
 
 // CreateUser implements business logic for create new user and save it in db
-func (u *UserUseCase) CreateUser(ctx context.Context, name string, email string, role entity.UserRole) (entity.User, error) {
+func (u *UserUseCase) CreateUser(ctx context.Context, name string, email string, role entity.UserRole) (*entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("CreateUser", map[string]string{
 		"name":  name,
 		"email": email,
 		"role":  string(role),
 	})
 
-	user := entity.User{Name: name, Email: email, Role: role}
+	user := &entity.User{Name: name, Email: email, Role: role}
 	savedUser, err := u.repo.Save(ctx, user)
 	if err != nil {
-		return entity.User{}, fmt.Errorf("ошибка записи пользователя в БД: %w", err)
+		return &entity.User{}, fmt.Errorf("ошибка записи пользователя в БД: %w", err)
 	}
 
 	u.cacheRepo.InvalidateAllUsersCache(ctx)
@@ -39,7 +39,7 @@ func (u *UserUseCase) CreateUser(ctx context.Context, name string, email string,
 }
 
 // GetUser implements business logic for fetch user with passed id from db
-func (u *UserUseCase) GetUser(ctx context.Context, id string) (entity.User, error) {
+func (u *UserUseCase) GetUser(ctx context.Context, id string) (*entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("GetUser", map[string]string{
 		"id": id,
 	})
@@ -53,10 +53,10 @@ func (u *UserUseCase) GetUser(ctx context.Context, id string) (entity.User, erro
 		user, err = u.repo.FindByID(ctx, id)
 		if err != nil {
 			if errors.Is(err, &ErrUserNotFound{}) {
-				return entity.User{}, err
+				return &entity.User{}, err
 			}
 
-			return entity.User{}, fmt.Errorf("не удалосьполучить пользователя из БД: %w", err)
+			return &entity.User{}, fmt.Errorf("не удалосьполучить пользователя из БД: %w", err)
 		}
 
 		u.cacheRepo.SaveUserToCache(ctx, user)
@@ -66,7 +66,7 @@ func (u *UserUseCase) GetUser(ctx context.Context, id string) (entity.User, erro
 }
 
 // ListUsers implements business logic for fetch all users from db
-func (u *UserUseCase) ListUsers(ctx context.Context) ([]entity.User, error) {
+func (u *UserUseCase) ListUsers(ctx context.Context) ([]*entity.User, error) {
 	u.methodCallerNotifier.NotifyMethodCalled("ListUsers", map[string]string{})
 
 	users, err := u.cacheRepo.FetchAllUsersFromCache(ctx)
@@ -77,7 +77,7 @@ func (u *UserUseCase) ListUsers(ctx context.Context) ([]entity.User, error) {
 
 		users, err = u.repo.FindAll(ctx)
 		if err != nil {
-			return []entity.User{}, fmt.Errorf("не удалось получить пользоватей из БД: %w", err)
+			return []*entity.User{}, fmt.Errorf("не удалось получить пользоватей из БД: %w", err)
 		}
 
 		u.cacheRepo.SaveAllUsersToCache(ctx, users)

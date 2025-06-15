@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"evrone_go_hw_5_1/internal/entity"
-	"evrone_go_hw_5_1/internal/repo"
 	"evrone_go_hw_5_1/internal/usecase"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -14,9 +13,9 @@ func TestUserService_CreateUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := repo.NewMockUserRepository(ctrl)
-	mockCache := repo.NewMockUserCacheRepository(ctrl)
-	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
+	mockRepo := usecase.NewMockUserRepository(ctrl)
+	mockCache := usecase.NewMockUserCacheRepository(ctrl)
+	mockNotifier := usecase.NewMockMethodCalledNotifier(ctrl)
 
 	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
@@ -24,9 +23,9 @@ func TestUserService_CreateUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("CreateUser", map[string]string{
 		"name": "Test User", "email": "test@example.com", "role": "admin",
 	})
-	mockRepo.EXPECT().Save(context.Background(), entity.User{
+	mockRepo.EXPECT().Save(context.Background(), &entity.User{
 		Name: "Test User", Email: "test@example.com", Role: entity.UserRoleAdmin,
-	}).Return(entity.User{
+	}).Return(&entity.User{
 		ID: "123", Name: "Test User", Email: "test@example.com", Role: entity.UserRoleAdmin,
 	}, nil)
 	mockCache.EXPECT().InvalidateAllUsersCache(context.Background())
@@ -43,9 +42,9 @@ func TestUserService_CreateUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("CreateUser", map[string]string{
 		"name": "Test User 2", "email": "test2@example.com", "role": "user",
 	})
-	mockRepo.EXPECT().Save(context.Background(), entity.User{
+	mockRepo.EXPECT().Save(context.Background(), &entity.User{
 		Name: "Test User 2", Email: "test2@example.com", Role: entity.UserRoleUser,
-	}).Return(entity.User{}, errors.New("save error"))
+	}).Return(&entity.User{}, errors.New("save error"))
 
 	_, err = userService.CreateUser(context.Background(), "Test User 2", "test2@example.com", entity.UserRoleUser)
 	if err == nil {
@@ -57,9 +56,9 @@ func TestUserService_GetUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := repo.NewMockUserRepository(ctrl)
-	mockCache := repo.NewMockUserCacheRepository(ctrl)
-	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
+	mockRepo := usecase.NewMockUserRepository(ctrl)
+	mockCache := usecase.NewMockUserCacheRepository(ctrl)
+	mockNotifier := usecase.NewMockMethodCalledNotifier(ctrl)
 
 	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
@@ -67,7 +66,7 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "123",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "123").Return(entity.User{
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "123").Return(&entity.User{
 		ID: "123", Name: "Cached User", Email: "cached@example.com", Role: entity.UserRoleUser,
 	}, nil)
 
@@ -83,11 +82,11 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "456",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "456").Return(entity.User{}, &usecase.ErrUserNotFound{})
-	mockRepo.EXPECT().FindByID(context.Background(), "456").Return(entity.User{
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "456").Return(&entity.User{}, &usecase.ErrUserNotFound{})
+	mockRepo.EXPECT().FindByID(context.Background(), "456").Return(&entity.User{
 		ID: "456", Name: "DB User", Email: "db@example.com", Role: entity.UserRoleAdmin,
 	}, nil)
-	mockCache.EXPECT().SaveUserToCache(context.Background(), entity.User{
+	mockCache.EXPECT().SaveUserToCache(context.Background(), &entity.User{
 		ID: "456", Name: "DB User", Email: "db@example.com", Role: entity.UserRoleAdmin,
 	})
 
@@ -103,8 +102,8 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "789",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
-	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(&entity.User{}, &usecase.ErrUserNotFound{})
+	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(&entity.User{}, &usecase.ErrUserNotFound{})
 
 	_, err = userService.GetUser(context.Background(), "789")
 	if err == nil {
@@ -115,12 +114,12 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "000",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "000").Return(entity.User{}, errors.New("cache error"))
-	mockRepo.EXPECT().FindByID(context.Background(), "000").Return(entity.User{
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "000").Return(&entity.User{}, errors.New("cache error"))
+	mockRepo.EXPECT().FindByID(context.Background(), "000").Return(&entity.User{
 		ID: "000", Name: "DB User 2", Email: "db2@example.com", Role: entity.UserRoleUser,
 	}, nil)
 
-	mockCache.EXPECT().SaveUserToCache(context.Background(), entity.User{
+	mockCache.EXPECT().SaveUserToCache(context.Background(), &entity.User{
 		ID: "000", Name: "DB User 2", Email: "db2@example.com", Role: entity.UserRoleUser,
 	}).Return(nil)
 
@@ -137,8 +136,8 @@ func TestUserService_GetUser(t *testing.T) {
 	mockNotifier.EXPECT().NotifyMethodCalled("GetUser", map[string]string{
 		"id": "789",
 	})
-	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(entity.User{}, &usecase.ErrUserNotFound{})
-	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(entity.User{}, errors.New("db error"))
+	mockCache.EXPECT().FetchUserFromCache(context.Background(), "789").Return(&entity.User{}, &usecase.ErrUserNotFound{})
+	mockRepo.EXPECT().FindByID(context.Background(), "789").Return(&entity.User{}, errors.New("db error"))
 
 	_, err = userService.GetUser(context.Background(), "789")
 	if err == nil {
@@ -150,15 +149,15 @@ func TestUserService_ListUsers(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := repo.NewMockUserRepository(ctrl)
-	mockCache := repo.NewMockUserCacheRepository(ctrl)
-	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
+	mockRepo := usecase.NewMockUserRepository(ctrl)
+	mockCache := usecase.NewMockUserCacheRepository(ctrl)
+	mockNotifier := usecase.NewMockMethodCalledNotifier(ctrl)
 
 	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 
 	// Случай 1: Пользователи найдены в кеше
 	mockNotifier.EXPECT().NotifyMethodCalled("ListUsers", map[string]string{})
-	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]entity.User{
+	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]*entity.User{
 		{ID: "123", Name: "User 1", Email: "user1@example.com", Role: entity.UserRoleUser},
 		{ID: "456", Name: "User 2", Email: "user2@example.com", Role: entity.UserRoleAdmin},
 	}, nil)
@@ -173,12 +172,12 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	// Случай 2: Пользователи не найдены в кеше, но найдены в БД
 	mockNotifier.EXPECT().NotifyMethodCalled("ListUsers", map[string]string{})
-	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]entity.User{}, errors.New("cache error"))
-	mockRepo.EXPECT().FindAll(context.Background()).Return([]entity.User{
+	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]*entity.User{}, errors.New("cache error"))
+	mockRepo.EXPECT().FindAll(context.Background()).Return([]*entity.User{
 		{ID: "789", Name: "User 3", Email: "user3@example.com", Role: entity.UserRoleUser},
 		{ID: "101", Name: "User 4", Email: "user4@example.com", Role: entity.UserRoleAdmin},
 	}, nil)
-	mockCache.EXPECT().SaveAllUsersToCache(context.Background(), []entity.User{
+	mockCache.EXPECT().SaveAllUsersToCache(context.Background(), []*entity.User{
 		{ID: "789", Name: "User 3", Email: "user3@example.com", Role: entity.UserRoleUser},
 		{ID: "101", Name: "User 4", Email: "user4@example.com", Role: entity.UserRoleAdmin},
 	})
@@ -193,8 +192,8 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	// Случай 3: Ошибка при получении пользователей из БД
 	mockNotifier.EXPECT().NotifyMethodCalled("ListUsers", map[string]string{})
-	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]entity.User{}, &usecase.ErrUserNotFound{})
-	mockRepo.EXPECT().FindAll(context.Background()).Return([]entity.User{}, errors.New("database error"))
+	mockCache.EXPECT().FetchAllUsersFromCache(context.Background()).Return([]*entity.User{}, &usecase.ErrUserNotFound{})
+	mockRepo.EXPECT().FindAll(context.Background()).Return([]*entity.User{}, errors.New("database error"))
 
 	_, err = userService.ListUsers(context.Background())
 	if err == nil {
@@ -206,9 +205,9 @@ func TestUserService_RemoveUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := repo.NewMockUserRepository(ctrl)
-	mockCache := repo.NewMockUserCacheRepository(ctrl)
-	mockNotifier := repo.NewMockMethodCalledNotifier(ctrl)
+	mockRepo := usecase.NewMockUserRepository(ctrl)
+	mockCache := usecase.NewMockUserCacheRepository(ctrl)
+	mockNotifier := usecase.NewMockMethodCalledNotifier(ctrl)
 
 	userService := usecase.NewUserUseCase(mockRepo, mockCache, mockNotifier)
 

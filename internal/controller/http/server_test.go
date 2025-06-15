@@ -17,27 +17,27 @@ import (
 )
 
 type MockUserService struct {
-	CreateUserFunc func(ctx context.Context, name, email string, role entity.UserRole) (entity.User, error)
-	GetUserFunc    func(ctx context.Context, id string) (entity.User, error)
-	ListUsersFunc  func(ctx context.Context) ([]entity.User, error)
+	CreateUserFunc func(ctx context.Context, name, email string, role entity.UserRole) (*entity.User, error)
+	GetUserFunc    func(ctx context.Context, id string) (*entity.User, error)
+	ListUsersFunc  func(ctx context.Context) ([]*entity.User, error)
 	RemoveUserFunc func(ctx context.Context, id string) error
 }
 
-func (m *MockUserService) CreateUser(ctx context.Context, name, email string, role entity.UserRole) (entity.User, error) {
+func (m *MockUserService) CreateUser(ctx context.Context, name, email string, role entity.UserRole) (*entity.User, error) {
 	if m.CreateUserFunc != nil {
 		return m.CreateUserFunc(ctx, name, email, role)
 	}
-	return entity.User{}, nil
+	return &entity.User{}, nil
 }
 
-func (m *MockUserService) GetUser(ctx context.Context, id string) (entity.User, error) {
+func (m *MockUserService) GetUser(ctx context.Context, id string) (*entity.User, error) {
 	if m.GetUserFunc != nil {
 		return m.GetUserFunc(ctx, id)
 	}
-	return entity.User{}, nil
+	return &entity.User{}, nil
 }
 
-func (m *MockUserService) ListUsers(ctx context.Context) ([]entity.User, error) {
+func (m *MockUserService) ListUsers(ctx context.Context) ([]*entity.User, error) {
 	if m.ListUsersFunc != nil {
 		return m.ListUsersFunc(ctx)
 	}
@@ -56,8 +56,8 @@ func TestServer_Save(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockService := &MockUserService{
-			CreateUserFunc: func(ctx context.Context, name, email string, role entity.UserRole) (entity.User, error) {
-				return entity.User{
+			CreateUserFunc: func(ctx context.Context, name, email string, role entity.UserRole) (*entity.User, error) {
+				return &entity.User{
 					ID:    "1",
 					Name:  name,
 					Email: email,
@@ -126,8 +126,8 @@ func TestServer_Save(t *testing.T) {
 
 	t.Run("ErrorSaveUser", func(t *testing.T) {
 		mockService := &MockUserService{
-			CreateUserFunc: func(ctx context.Context, name, email string, role entity.UserRole) (entity.User, error) {
-				return entity.User{}, errors.New("Some error")
+			CreateUserFunc: func(ctx context.Context, name, email string, role entity.UserRole) (*entity.User, error) {
+				return &entity.User{}, errors.New("Some error")
 			},
 		}
 
@@ -150,8 +150,8 @@ func TestFindByID(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockService := &MockUserService{
-			GetUserFunc: func(ctx context.Context, id string) (entity.User, error) {
-				return entity.User{
+			GetUserFunc: func(ctx context.Context, id string) (*entity.User, error) {
+				return &entity.User{
 					ID:    "1",
 					Name:  "Test User",
 					Email: "test@example.com",
@@ -181,8 +181,8 @@ func TestFindByID(t *testing.T) {
 
 	t.Run("NotFound", func(t *testing.T) {
 		mockService := &MockUserService{
-			GetUserFunc: func(ctx context.Context, id string) (entity.User, error) {
-				return entity.User{}, &usecase.ErrUserNotFound{}
+			GetUserFunc: func(ctx context.Context, id string) (*entity.User, error) {
+				return &entity.User{}, &usecase.ErrUserNotFound{}
 			},
 		}
 
@@ -200,8 +200,8 @@ func TestFindByID(t *testing.T) {
 
 	t.Run("InternalError", func(t *testing.T) {
 		mockService := &MockUserService{
-			GetUserFunc: func(ctx context.Context, id string) (entity.User, error) {
-				return entity.User{}, fmt.Errorf("internal error")
+			GetUserFunc: func(ctx context.Context, id string) (*entity.User, error) {
+				return &entity.User{}, fmt.Errorf("internal error")
 			},
 		}
 
@@ -223,8 +223,8 @@ func TestServer_FindAll(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockService := &MockUserService{
-			ListUsersFunc: func(ctx context.Context) ([]entity.User, error) {
-				return []entity.User{
+			ListUsersFunc: func(ctx context.Context) ([]*entity.User, error) {
+				return []*entity.User{
 					{
 						ID:    "1",
 						Name:  "User 1",
@@ -265,7 +265,7 @@ func TestServer_FindAll(t *testing.T) {
 
 	t.Run("ServiceError", func(t *testing.T) {
 		mockService := &MockUserService{
-			ListUsersFunc: func(ctx context.Context) ([]entity.User, error) {
+			ListUsersFunc: func(ctx context.Context) ([]*entity.User, error) {
 				return nil, fmt.Errorf("internal service error")
 			},
 		}

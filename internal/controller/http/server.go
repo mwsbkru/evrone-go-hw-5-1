@@ -84,7 +84,7 @@ func (s *Server) FindByID(writer http.ResponseWriter, request *http.Request) {
 		Role:  string(user.Role),
 	}
 
-	userResponseBody, err := json.Marshal(userResponse)
+	userResponseBody, err := json.Marshal(&userResponse)
 	if err != nil {
 		slog.Error("Не удалось сформировать тело ответа", slog.String("error", err.Error()))
 		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
@@ -116,7 +116,7 @@ func (s *Server) FindAll(writer http.ResponseWriter, request *http.Request) {
 
 	usersResponse := dto.UsersResponseBody{Data: usersResponseList}
 
-	usersResponseBody, err := json.Marshal(usersResponse)
+	usersResponseBody, err := json.Marshal(&usersResponse)
 	if err != nil {
 		slog.Error("Не удалось сформировать тело ответа", slog.String("error", err.Error()))
 		s.respondWithError(writer, http.StatusInternalServerError, err.Error())
@@ -151,7 +151,7 @@ func (s *Server) respondWithError(writer http.ResponseWriter, code int, message 
 		Message: message,
 	}
 
-	responseBody, err := json.Marshal(errorObject)
+	responseBody, err := json.Marshal(&errorObject)
 	if err != nil {
 		slog.Error("Не удалось сформировать тело ошибки", slog.String("error", err.Error()))
 		writer.WriteHeader(http.StatusInternalServerError)

@@ -31,7 +31,7 @@ func (n *NatsMethodCalledNotifier) NotifyMethodCalled(method string, params map[
 		Params: params,
 	}
 
-	msg, err := json.Marshal(notification)
+	msg, err := json.Marshal(&notification)
 	if err != nil {
 		return fmt.Errorf("не удалось сериализовать сообщение для отправки в Nats: %w", err)
 	}

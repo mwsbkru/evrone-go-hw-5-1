@@ -21,7 +21,7 @@ func NewPostgreUserRepo(conn *pgx.Conn) *PostgreUserRepo {
 }
 
 // Save saves user in DB
-func (p *PostgreUserRepo) Save(ctx context.Context, user entity.User) (entity.User, error) {
+func (p *PostgreUserRepo) Save(ctx context.Context, user *entity.User) (*entity.User, error) {
 	var id string
 	query := "INSERT INTO users (name, email, role) VALUES ($1, $2, $3) RETURNING id"
 	err := p.conn.QueryRow(ctx, query, user.Name, user.Email, user.Role).Scan(&id)
@@ -35,7 +35,7 @@ func (p *PostgreUserRepo) Save(ctx context.Context, user entity.User) (entity.Us
 }
 
 // FindByID finds user in DB by id
-func (p *PostgreUserRepo) FindByID(ctx context.Context, id string) (entity.User, error) {
+func (p *PostgreUserRepo) FindByID(ctx context.Context, id string) (*entity.User, error) {
 	query := "SELECT * from users WHERE id = $1"
 	var user entity.User
 
@@ -48,17 +48,17 @@ func (p *PostgreUserRepo) FindByID(ctx context.Context, id string) (entity.User,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return entity.User{}, &usecase.ErrUserNotFound{}
+		return &entity.User{}, &usecase.ErrUserNotFound{}
 	}
 	if err != nil {
-		return entity.User{}, fmt.Errorf("не удалось получить пользователя из БД: %w", err)
+		return &entity.User{}, fmt.Errorf("не удалось получить пользователя из БД: %w", err)
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 // FindAll fetches all users from db
-func (p *PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
+func (p *PostgreUserRepo) FindAll(ctx context.Context) ([]*entity.User, error) {
 	query := "SELECT * FROM users"
 
 	rows, err := p.conn.Query(ctx, query)
@@ -67,7 +67,7 @@ func (p *PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
 	}
 	defer rows.Close()
 
-	var users []entity.User
+	var users []*entity.User
 
 	for rows.Next() {
 		var user entity.User
@@ -83,7 +83,7 @@ func (p *PostgreUserRepo) FindAll(ctx context.Context) ([]entity.User, error) {
 			return nil, fmt.Errorf("ошибка при получении пользователей из БД, сканированиe строки: %w", err)
 		}
 
-		users = append(users, user)
+		users = append(users, &user)
 	}
 
 	if err := rows.Err(); err != nil {
