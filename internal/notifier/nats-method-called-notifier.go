@@ -1,4 +1,4 @@
-package repo
+package notifier
 
 import (
 	"encoding/json"

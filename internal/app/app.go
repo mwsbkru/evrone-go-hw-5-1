@@ -4,8 +4,10 @@ import (
 	"context"
 	"evrone_go_hw_5_1/config"
 	"evrone_go_hw_5_1/internal/controller/http"
+	"evrone_go_hw_5_1/internal/notifier"
 	repo2 "evrone_go_hw_5_1/internal/repo"
 	"evrone_go_hw_5_1/internal/usecase"
+	"evrone_go_hw_5_1/internal/user-cache"
 	"github.com/jackc/pgx/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
@@ -46,8 +48,8 @@ func Run(ctx context.Context, cfg *config.Config) {
 	defer natsConn.Close()
 
 	repo := repo2.NewPostgreUserRepo(conn)
-	cacheRepo := repo2.NewRedisUserCacheRepo(redisClient, cfg)
-	methodCalledNotifier := repo2.NewNatsMethodCalledNotifier(natsConn, cfg)
+	cacheRepo := user_cache.NewRedisUserCacheRepo(redisClient, cfg)
+	methodCalledNotifier := notifier.NewNatsMethodCalledNotifier(natsConn, cfg)
 	userService := usecase.NewUserUseCase(repo, cacheRepo, methodCalledNotifier)
 	server := http.NewServer(cfg, userService)
 
