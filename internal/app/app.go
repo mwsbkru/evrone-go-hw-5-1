@@ -7,7 +7,7 @@ import (
 	"evrone_go_hw_5_1/internal/notifier"
 	repo2 "evrone_go_hw_5_1/internal/repo"
 	"evrone_go_hw_5_1/internal/usecase"
-	"evrone_go_hw_5_1/internal/user-cache"
+	"evrone_go_hw_5_1/internal/user_cache"
 	"github.com/jackc/pgx/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
